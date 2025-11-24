@@ -5,7 +5,7 @@ inputs:
     description: The name of the environment.
     required: true
   repo_access_token:
-    description: GitHub token for API access.
+    description: GitHub personal-acess token for API access. Requires read permissions on environments and read/write permissions on actions.
     required: true
 runs:
   using: "composite"
@@ -27,10 +27,9 @@ runs:
             }
           }
         }
-        echo "::set-output name=environment_id::$($environmentId)"
+        echo "environment_id=$($environmentId)" >> $env:GITHUB_OUTPUT
 
     - name: Auto Approve Deployment
-      if: startsWith(inputs.environment, 'production')
       shell: pwsh
       run: |
         $url = "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/pending_deployments"

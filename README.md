@@ -67,10 +67,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Auto Approve Environment Deployment
         uses: paulsony13/auto-approve-environment-deployment@v1.0.0
         with:
           environment: production
-          repo_access_token: ${{ secrets.GITHUB_TOKEN }}
+          repo_access_token: ${{ secrets.YOUR_PERSONAL_ACCESS_TOKEN }}
+```
