@@ -4,7 +4,7 @@ inputs:
   environment:
     description: The name of the environment.
     required: true
-  repo_access_token:
+  token:
     description: GitHub personal-acess token for API access. Requires read permissions on environments and read/write permissions on actions.
     required: true
 runs:
@@ -17,7 +17,7 @@ runs:
         $environmentId = ""
         $url = "https://api.github.com/repos/${{ github.repository }}/environments"
         $response = Invoke-RestMethod -Uri $url -Method Get -Headers @{
-          Authorization = "Bearer ${{ inputs.repo_access_token }}"
+          Authorization = "Bearer ${{ inputs.token }}"
         }
         if ($response) {
           foreach ($environment in $response.environments) {
@@ -41,5 +41,5 @@ runs:
         }
         "@
         Invoke-RestMethod -Uri $url -Method POST -Headers @{
-          Authorization = "Bearer ${{ inputs.repo_access_token }}"
+          Authorization = "Bearer ${{ inputs.token }}"
         } -Body $body -ContentType "application/json"

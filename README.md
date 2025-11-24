@@ -1,6 +1,6 @@
 # Auto Approve Environment Deployment
 
-![Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-Auto%20Approve%20Environment%20Deployment-brightgreen)  
+![Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-Auto%20Approve%20Environment%20Deployment-brightgreen)
 
 Easily automate the approval of pending deployments in GitHub Actions when using environment protection rules with multiple dependent jobs.
 
@@ -11,9 +11,10 @@ Easily automate the approval of pending deployments in GitHub Actions when using
 When using GitHub Actions with **environment protection rules**, each dependent job in your workflow requires manual approval to proceed. For example, if you have four dependent jobs and environment protection is enabled, GitHub requires manual approval **four times** (or more based on the number of jobs). This defeats the purpose of automation by introducing excessive manual intervention.
 
 ### Example Workflow Challenge
-- **Job A** → Requires manual approval  
-- **Job B** → Depends on Job A and also requires manual approval  
-- **Job C** → Depends on Job B and so on...  
+
+- **Job A** → Requires manual approval
+- **Job B** → Depends on Job A and also requires manual approval
+- **Job C** → Depends on Job B and so on...
 
 If environment protection rules are applied, manual approvals are required at each step.
 
@@ -22,6 +23,7 @@ If environment protection rules are applied, manual approvals are required at ea
 ## 🚀 Solution
 
 This GitHub Action solves the problem by automating the approval process for subsequent jobs once the initial approval is granted. It works by:
+
 1. Retrieving the environment ID of the targeted environment.
 2. Auto-approving any pending deployments for that environment, reducing user intervention.
 
@@ -43,14 +45,14 @@ With this Action, you can hook it into any stage of your workflow, and it will a
 ### Prerequisites
 
 1. **Environment Protection Rules**: Ensure your repository has environments with protection rules configured.
-2. **GitHub Personal Access Token**: Generate a token with `repo` scope to authenticate API calls.
+2. **GitHub Personal Access Token**: Generate a token with `repo` scope to authenticate API calls. At a mimimum it requires read & write access to `actions`, and read access to `environments`. You cannot use the `GITHUB_TOKEN` as granting it `enviornment` permissions in Github Actions are not currently supported.
 
 ### Inputs
 
-| Name               | Description                          | Required | Default |
-|--------------------|--------------------------------------|----------|---------|
-| `environment`      | The name of the environment.         | ✅       | N/A     |
-| `repo_access_token`| GitHub token for API access.         | ✅       | N/A     |
+| Name          | Description                  | Required | Default |
+| ------------- | ---------------------------- | -------- | ------- |
+| `environment` | The name of the environment. | ✅       | N/A     |
+| `token`       | GitHub token for API access. | ✅       | N/A     |
 
 ### Example Workflow
 
