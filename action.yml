@@ -50,10 +50,9 @@ runs:
           Write-Host "Deployment approved successfully"
         }
         catch {
-          $statusCode = $_.Exception.Response.StatusCode.value__
           $errorMessage = $_.Exception.Message
           
-          if ($statusCode -eq 422 -and $errorMessage -like "*No pending deployment*") {
+          if ($errorMessage -like "*No pending deployment*") {
             Write-Host "No pending deployments found."
             exit 0
           }
