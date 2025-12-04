@@ -79,5 +79,5 @@ jobs:
         uses: paulsony13/auto-approve-environment-deployment@v1.0.0
         with:
           environment: production
-          repo_access_token: ${{ secrets.YOUR_PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.YOUR_PERSONAL_ACCESS_TOKEN }}
 ```
