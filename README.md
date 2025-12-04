@@ -76,7 +76,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Auto Approve Environment Deployment
-        uses: paulsony13/auto-approve-environment-deployment@v1.0.0
+        uses: jviall/auto-approve-environment-deployments@v1.0.0
         with:
           environment: production
           token: ${{ secrets.YOUR_PERSONAL_ACCESS_TOKEN }}
