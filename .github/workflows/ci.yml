@@ -1,0 +1,80 @@
+name: CI - Test Auto Approval
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  unprotected-job:
+    runs-on: ubuntu-latest
+    environment: test-unprotected
+    steps:
+      - name: Test deployment to unprotected environment
+        run: |
+          echo "Deploying to test-unprotected environment"
+          echo "This should not require approval"
+
+  test-approve-unprotected-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Attempt approval when no pending jobs exist
+        uses: ./
+        with:
+          environment: test-unprotected
+          token: ${{ secrets.PAT }}
+
+  protected-job:
+    runs-on: ubuntu-latest
+    environment: test-protected
+    needs: test-approve-unprotected-job
+    steps:
+      - name: Test deployment to unprotected environment
+        run: |
+          echo "Deploying to test-unprotected environment"
+          echo "This should not require approval"
+
+  test-approve-protected-job:
+    runs-on: ubuntu-latest
+    needs: test-approve-unprotected-job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Attempt approval when no pending jobs exist
+        uses: ./
+        with:
+          environment: test-protected
+          token: ${{ secrets.PAT }}
+
+  verify-success:
+    runs-on: ubuntu-latest
+    needs: [test-approve-unprotected-job, test-approve-protected-job]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Check for remaining pending deployments
+        shell: pwsh
+        run: |
+          $url = "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/pending_deployments"
+          try {
+            $response = Invoke-RestMethod -Uri $url -Method Get -Headers @{
+              Authorization = "Bearer ${{ secrets.PAT }}"
+            }
+            
+            if ($response -and $response.Count -gt 0) {
+              Write-Error "❌ Found $($response.Count) pending deployments remaining - auto-approval may have failed"
+              exit 1
+            } else {
+              Write-Host "✅ No pending deployments found - all deployments were properly handled"
+            }
+          }
+          catch {
+            $errorMessage = $_.Exception.Message
+            Write-Host "ℹ️ Could not check pending deployments: $errorMessage"
+            Write-Host "This may be expected if no deployments were created"
+            exit 1
+          }

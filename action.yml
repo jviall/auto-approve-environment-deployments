@@ -47,17 +47,13 @@ runs:
           Invoke-RestMethod -Uri $url -Method POST -Headers @{
             Authorization = "Bearer ${{ inputs.token }}"
           } -Body $body -ContentType "application/json"
-          Write-Host "Deployment approved successfully"
         }
         catch {
-          $errorMessage = $_.Exception.Message
-          
-          if ($errorMessage -like "*No pending deployment*") {
-            Write-Host "No pending deployments found."
+          $statusCode = $_.Exception.Response.StatusCode.value__
+          if ($statusCode -eq 422) {
             exit 0
           }
           else {
-            Write-Error "Failed to approve deployment: $errorMessage"
             throw
           }
         }
