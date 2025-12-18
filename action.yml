@@ -33,6 +33,11 @@ runs:
         echo "Found environment id: $($environmentId)"
         echo "environment_id=$($environmentId)" >> $env:GITHUB_OUTPUT
 
+    - name: Wait 1s
+      shell: pwsh
+      run: |
+        Start-Sleep -Seconds 1
+
     - name: Auto Approve Deployment
       shell: pwsh
       run: |
