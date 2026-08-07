@@ -33,11 +33,6 @@ runs:
         echo "Found environment id: $($environmentId)"
         echo "environment_id=$($environmentId)" >> $env:GITHUB_OUTPUT
 
-    - name: Wait 1s
-      shell: pwsh
-      run: |
-        Start-Sleep -Seconds 1
-
     - name: Auto Approve Deployment
       shell: pwsh
       run: |
@@ -49,36 +44,53 @@ runs:
           "comment": "Auto-approved for automation"
         }
         "@
-        Write-Host "Making request to: $url"
-        Write-Host "Request body: $body"
-        try {
-          $response = Invoke-RestMethod -Uri $url -Method POST -Headers @{
-            Authorization = "Bearer ${{ inputs.token }}"
-          } -Body $body -ContentType "application/json"
-          Write-Host "✅ Successfully approved pending deployments"
-          Write-Host "Response: $($response | ConvertTo-Json -Depth 10)"
-        }
-        catch {
-          $statusCode = $_.Exception.Response.StatusCode.value__
-          Write-Host "❌ Request failed with status code: $statusCode"
-          
-          # Try to get error response body
+
+        # First attempt is immediate; subsequent retries wait these many seconds.
+        $backoff = @(1, 2, 5, 10)
+        $maxAttempts = $backoff.Count + 1
+
+        for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+          Write-Host "Attempt $attempt of $maxAttempts"
+          Write-Host "Making request to: $url"
+          Write-Host "Request body: $body"
           try {
-            $errorResponse = $_.ErrorDetails.Message
-            if ($errorResponse) {
-              Write-Host "Error response body: $errorResponse"
-            }
-          }
-          catch {
-            Write-Host "Could not retrieve error response body"
-          }
-          
-          Write-Host "Full error: $($_.Exception.Message)"
-          if ($statusCode -eq 422) {
-            Write-Host "ℹ️ No pending deployments found to approve"
+            $response = Invoke-RestMethod -Uri $url -Method POST -Headers @{
+              Authorization = "Bearer ${{ inputs.token }}"
+            } -Body $body -ContentType "application/json"
+            Write-Host "✅ Successfully approved pending deployments"
+            Write-Host "Response: $($response | ConvertTo-Json -Depth 10)"
             exit 0
           }
-          else {
-            throw
+          catch {
+            $statusCode = $_.Exception.Response.StatusCode.value__
+            Write-Host "❌ Request failed with status code: $statusCode"
+
+            # Try to get error response body
+            try {
+              $errorResponse = $_.ErrorDetails.Message
+              if ($errorResponse) {
+                Write-Host "Error response body: $errorResponse"
+              }
+            }
+            catch {
+              Write-Host "Could not retrieve error response body"
+            }
+
+            Write-Host "Full error: $($_.Exception.Message)"
+
+            if ($statusCode -eq 422) {
+              # Pending deployment not registered yet — likely a slow reusable-workflow gate. Retry.
+              if ($attempt -lt $maxAttempts) {
+                $wait = $backoff[$attempt - 1]
+                Write-Host "ℹ️ No pending deployments yet; retrying in ${wait}s..."
+                Start-Sleep -Seconds $wait
+                continue
+              }
+              Write-Host "ℹ️ No pending deployments found to approve after $maxAttempts attempts; giving up."
+              exit 0
+            }
+            else {
+              throw
+            }
           }
         }
